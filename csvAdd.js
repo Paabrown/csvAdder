@@ -92,7 +92,7 @@ const csvAdd = function() {
             }
           })
         } else {
-          throw new Error(`Source file located at ${srcFilePath} either does not exist or is not a csv`)
+          console.log(srcFilePath, ' is not a csv or does not exist, and was skipped')
         }
       })
     })
