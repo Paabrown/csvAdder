@@ -1,16 +1,6 @@
-const CronJob = require('cron').CronJob;
 const { csvAdd } = require('./csvAdd.js');
+const { interval } = require('./config')
 
-const options = {
-  cronTime: '00 * * * * *',
-  onTick: () => csvAdd(),
-  start: true, /* Start the job right now */
-  timeZone: 'America/New_York', /* Time zone of this job. */
-  runOnInit: true
-}
+setInterval(csvAdd, interval)
 
-const job = new CronJob(options);
-
-job.start();
-
-console.log('job running?', job.running);
+console.log('job running!');

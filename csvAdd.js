@@ -22,80 +22,85 @@ const csvAdd = function() {
       console.log('about to check all of the following:', srcFolders);
 
       srcFolders.forEach((srcFolderName, i) => {
-        console.log('moving onto:', srcFolderName);
-        const srcFilePath = path.join(source, srcFolderName, srcFileName);
-        const destFileName = srcFolderName + '.csv';
-        const destFilePath = path.join(destination, destFileName);
+        let fileStat = fs.statSync(path.join(source, srcFolderName))
 
-        let fileExists = fs.existsSync(srcFilePath);
-
-        if (/\.csv$/.test(srcFilePath) && fileExists) {
-          fs.readFile(srcFilePath, 'utf8', (err, dataSrc) => {
-            if (err) {
-              throw err;
-            }
-            
-            if (destFiles.includes(destFileName)) {
-
-              fs.readFile(destFilePath, 'utf8', (err, dataDest) => {
-                if (err) {
-                  throw err;
-                }
-
-                csv.parse(dataSrc, parseOptions, (err, dataSrc) => {
-                  if (err) {
-                    throw err;
-                  }
-                
-                  csv.parse(dataDest, parseOptions, (err, dataDest) => {
+        if (fileStat.isDirectory()) {
+          console.log('moving onto:', srcFolderName);
+          const srcFilePath = path.join(source, srcFolderName, srcFileName);
+          const destFileName = srcFolderName + '.csv';
+          const destFilePath = path.join(destination, destFileName);
+  
+          if (/\.csv$/.test(srcFilePath)) {
+            fs.readFile(srcFilePath, 'utf8', (err, dataSrc) => {
+              if (err) {
+                console.log('skipped ', srcFilePath, 'because of err:', err)
+              } else {
+                if (destFiles.includes(destFileName)) {
+    
+                  fs.readFile(destFilePath, 'utf8', (err, dataDest) => {
                     if (err) {
                       throw err;
                     }
-
-                    const noDups = {};
-            
-                    dataSrc.forEach(row => {
-                      let key = row['Session ID'] + row['Transfer ID']
-                      key.length ? noDups[key] = row : null;
-                    });
-            
-                    dataDest.forEach(row => {
-                      let key = row['Session ID'] + row['Transfer ID']
-                      key.length ? noDups[key] = row : null;
-                    });
-            
-                    const finalData = Object.keys(noDups).map(key => noDups[key]);
-                    
-                    csv.stringify(finalData, (err, output) => {
+    
+                    csv.parse(dataSrc, parseOptions, (err, dataSrc) => {
                       if (err) {
-                        throw err
+                        throw err;
                       }
-
-                      let finalOutput = headers.join(',') + '\n' + output;
-                      fs.writeFile(destFilePath, finalOutput, (err) => {
+                    
+                      csv.parse(dataDest, parseOptions, (err, dataDest) => {
                         if (err) {
-                          throw err
+                          throw err;
                         }
-
-                        console.log('data added to: ', destFilePath)
+    
+                        const noDups = {};
+                
+                        dataSrc.forEach(row => {
+                          let key = row['Session ID'] + row['Transfer ID']
+                          key.length ? noDups[key] = row : null;
+                        });
+                
+                        dataDest.forEach(row => {
+                          let key = row['Session ID'] + row['Transfer ID']
+                          key.length ? noDups[key] = row : null;
+                        });
+                
+                        const finalData = Object.keys(noDups).map(key => noDups[key]);
+                        
+                        csv.stringify(finalData, (err, output) => {
+                          if (err) {
+                            throw err
+                          }
+    
+                          let finalOutput = headers.join(',') + '\n' + output;
+                          fs.writeFile(destFilePath, finalOutput, (err) => {
+                            if (err) {
+                              throw err
+                            }
+    
+                            console.log('data added to: ', destFilePath)
+                          });
+                        });
                       });
                     });
                   });
-                });
-              });
-
-            } else {
-              fs.writeFile(destFilePath, dataSrc, (err) => {
-                if (err) {
-                  throw err
+    
+                } else {
+                  fs.writeFile(destFilePath, dataSrc, (err) => {
+                    if (err) {
+                      throw err
+                    }
+    
+                    console.log('created and wrote to: ', destFilePath)
+                  });
                 }
-
-                console.log('created and wrote to: ', destFilePath)
-              });
-            }
-          })
+              }
+              
+            })
+          } else {
+            throw new Error('file path specified in config is not a csv:', srcFilePath)
+          }
         } else {
-          console.log(srcFilePath, ' is not a csv or does not exist, and was skipped')
+          console.log('skipped looking in', srcFolderName, 'because it is not a directory')
         }
       })
     })
