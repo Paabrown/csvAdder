@@ -19,7 +19,10 @@ const csvAdd = function() {
         throw err;
       }
 
+      console.log('about to check all of the following:', srcFolders);
+
       srcFolders.forEach((srcFolderName, i) => {
+        console.log('moving onto:', srcFolderName);
         const srcFilePath = path.join(source, srcFolderName, srcFileName);
         const destFileName = srcFolderName + '.csv';
         const destFilePath = path.join(destination, destFileName);
